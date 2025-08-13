@@ -70,6 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.error("Failed to decode access token:", error);
                 setAuthData({ userId: 'tg', username: "j" });
             }
+        } else {
+            console.error("access_token not found")
         }
     }, [authData]);
 

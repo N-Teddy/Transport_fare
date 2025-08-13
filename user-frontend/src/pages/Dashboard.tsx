@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -11,7 +11,8 @@ import {
 } from 'chart.js';
 import {
     MapPin, Settings, Route, Wallet, Gauge, Car, Users, AlertCircle,
-    CreditCard, Menu, X, History, User, Star, DollarSign, ChevronRight
+    CreditCard, Menu,
+    User
 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 
@@ -21,6 +22,7 @@ import { useGetTripsByDriver } from '../hooks/tripHook';
 import { useAuth } from '../context/AuthContext';
 import { useGetVehicle } from '../hooks/vehicleHook';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -29,13 +31,13 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 // HELPER & UI COMPONENTS
 //================================================================
 
-const cardAnimation = {
+export const cardAnimation = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-const formatDate = (date: Date | string ) => {
+const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
@@ -63,139 +65,32 @@ interface RecentTripsProps {
 }
 
 //================================================================
-// SIDEBAR COMPONENT
+// FAREWAY LOGO COMPONENT
 //================================================================
 
-const Sidebar = ({ isOpen, toggleSidebar }: { isOpen: boolean; toggleSidebar: () => void }) => {
-    const navigate = useNavigate();
-    const { authData: { username } } = useAuth();
+export const FareWayHeaderLogo = () => (
+    <div className="flex items-center space-x-3">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="12" fill="white" fillOpacity="0.2" />
+            <path d="M12 24L18 18L24 24L30 18L36 24" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="18" cy="30" r="2.5" fill="white" />
+            <circle cx="30" cy="30" r="2.5" fill="white" />
+        </svg>
+        <div className="text-white">
+            <h1 className="text-2xl font-bold">FareWay</h1>
+            <p className="text-xs text-emerald-100">Driver Dashboard</p>
+        </div>
+    </div>
+);
 
-    const menuItems = [
-        {
-            icon: History,
-            label: 'Trip History',
-            onClick: () => navigate('/trip-history'),
-            color: 'text-emerald-600',
-            bgColor: 'bg-emerald-50',
-            hoverBg: 'hover:bg-emerald-100'
-        },
-        {
-            icon: User,
-            label: 'Profile',
-            onClick: () => navigate('/profile'),
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-            hoverBg: 'hover:bg-blue-100'
-        },
-        {
-            icon: Star,
-            label: 'Rating',
-            onClick: () => navigate('/rating'),
-            color: 'text-yellow-600',
-            bgColor: 'bg-yellow-50',
-            hoverBg: 'hover:bg-yellow-100'
-        },
-        {
-            icon: DollarSign,
-            label: 'Regional Rates',
-            onClick: () => navigate('/rates'),
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-50',
-            hoverBg: 'hover:bg-purple-100'
-        }
-    ];
-
-    return (
-        <>
-            {/* Overlay for mobile */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={toggleSidebar}
-                        className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                    />
-                )}
-            </AnimatePresence>
-
-            {/* Sidebar */}
-            <motion.aside
-                initial={false}
-                animate={{
-                    x: isOpen ? 0 : '-100%',
-                }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className={`fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 overflow-y-auto`}
-            >
-                {/* Sidebar Header */}
-                <div className="p-6 bg-gradient-to-r from-emerald-500 to-teal-500">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                            <img
-                                src={`https://placehold.co/50x50/ecfdf5/065f46?text=${username?.charAt(0).toUpperCase() ?? 'U'}`}
-                                alt="User Avatar"
-                                className="w-12 h-12 rounded-full border-3 border-white shadow-md"
-                            />
-                            <div>
-                                <h3 className="text-white font-bold text-lg">{username || 'Driver'}</h3>
-                                <p className="text-emerald-100 text-sm">Driver Dashboard</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={toggleSidebar}
-                            className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                        >
-                            <X size={20} className="text-white" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Navigation Items */}
-                <nav className="p-4 space-y-2">
-                    {menuItems.map((item, index) => (
-                        <motion.button
-                            key={index}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={item.onClick}
-                            className={`w-full flex items-center justify-between p-4 rounded-2xl ${item.bgColor} ${item.hoverBg} transition-all duration-200 group`}
-                        >
-                            <div className="flex items-center space-x-3">
-                                <div className={`p-2 rounded-xl bg-white shadow-sm ${item.color}`}>
-                                    <item.icon size={20} />
-                                </div>
-                                <span className={`font-medium ${item.color}`}>{item.label}</span>
-                            </div>
-                            <ChevronRight
-                                size={18}
-                                className={`${item.color} opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-200`}
-                            />
-                        </motion.button>
-                    ))}
-                </nav>
-
-                {/* Sidebar Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
-                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4">
-                        <p className="text-sm text-gray-600 mb-2">Need help?</p>
-                        <button className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors">
-                            Contact Support →
-                        </button>
-                    </div>
-                </div>
-            </motion.aside>
-        </>
-    );
-};
 
 //================================================================
 // DASHBOARD SUB-COMPONENTS
 //================================================================
 
-const DashboardHeader = ({ username, toggleSidebar }: { username: string | null; toggleSidebar: () => void }) => {
+const DashboardHeader = () => {
     const navigate = useNavigate();
+    const { authData: { username } } = useAuth();
 
     return (
         <motion.header
@@ -204,22 +99,20 @@ const DashboardHeader = ({ username, toggleSidebar }: { username: string | null;
             animate="visible"
             variants={cardAnimation}
         >
-            <div className="flex items-center space-x-4">
-                {/* Menu Button */}
-                <button
-                    onClick={toggleSidebar}
-                    className="p-3 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
-                >
+            <div className="flex items-center space-x-6">
+                {/* Mobile Menu Button */}
+                <button className="lg:hidden p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors">
                     <Menu size={24} className="text-white" />
-                    teddy
                 </button>
 
-                <img src={`https://placehold.co/60x60/ecfdf5/065f46?text=${username?.charAt(0).toUpperCase() ?? 'U'}`} alt="User Avatar" className="w-16 h-16 rounded-full border-4 border-white shadow-md" />
-                <div>
-                    <h1 className="text-3xl font-bold">Welcome, {username || 'Driver'}!</h1>
-                    <p className="text-emerald-100">Your performance at a glance.jk</p>
+                <FareWayHeaderLogo />
+
+                <div className="hidden md:block border-l border-white/30 pl-6 ml-2">
+                    <h2 className="text-xl font-semibold">Welcome back, {username || 'Driver'}!</h2>
+                    <p className="text-emerald-100 text-sm">Your performance at a glance</p>
                 </div>
             </div>
+
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <button
                     onClick={() => navigate('/trip')}
@@ -228,13 +121,13 @@ const DashboardHeader = ({ username, toggleSidebar }: { username: string | null;
                     <MapPin size={20} />
                     <span>Start a Trip</span>
                 </button>
-                <button className="flex items-center space-x-2 px-6 py-3 bg-white text-emerald-600 font-semibold rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300">
+                <button className="flex items-center space-x-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-full shadow-lg hover:bg-white/30 transition-colors duration-300 border border-white/30">
                     <Settings size={20} />
                     <span>Settings</span>
                 </button>
             </div>
         </motion.header>
-    )
+    );
 };
 
 const StatsSection = ({ trips }: StatsSectionProps) => {
@@ -249,25 +142,27 @@ const StatsSection = ({ trips }: StatsSectionProps) => {
 
     return (
         <motion.section className="grid grid-cols-1 md:grid-cols-3 gap-6" variants={cardAnimation}>
-            <div className="bg-white rounded-3xl shadow-xl p-6 flex items-center space-x-4">
+            <div className="bg-white rounded-3xl shadow-xl p-6 flex items-center space-x-4 hover:shadow-2xl transition-shadow">
                 <div className="p-3 rounded-full bg-emerald-100 text-emerald-500"><Route /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Total Trips</p>
                     <p className="text-2xl font-bold text-gray-800">{stats.totalTrips}</p>
                 </div>
             </div>
-            <div className="bg-white rounded-3xl shadow-xl p-6 flex items-center space-x-4">
+            <div className="bg-white rounded-3xl shadow-xl p-6 flex items-center space-x-4 hover:shadow-2xl transition-shadow">
                 <div className="p-3 rounded-full bg-teal-100 text-teal-500"><Wallet /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Total Earnings</p>
                     <p className="text-2xl font-bold text-gray-800">{formatCurrency(stats.totalEarnings)}</p>
                 </div>
             </div>
-            <div className="bg-white rounded-3xl shadow-xl p-6 flex items-center space-x-4">
+            <div className="bg-white rounded-3xl shadow-xl p-6 flex items-center space-x-4 hover:shadow-2xl transition-shadow">
                 <div className="p-3 rounded-full bg-cyan-100 text-cyan-500"><Gauge /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Total Distance</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.totalDistance.toFixed(1)} km</p>
+                    <p className="text-2xl font-bold text-gray-800">
+                        {/* {stats.totalDistance.toFixed(1)} */}
+                        km</p>
                 </div>
             </div>
         </motion.section>
@@ -305,8 +200,22 @@ const WeeklyEarningsChart = ({ trips }: { trips: TripResponseDto[] | undefined }
                     options={{
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: { x: { grid: { display: false }, ticks: { color: '#4B5563' } }, y: { beginAtZero: true, grid: { color: '#E5E7EB' }, ticks: { color: '#4B5563' } } },
-                        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1F2937', titleColor: '#F9FAFB', bodyColor: '#D1D5DB', borderColor: '#D1D5DB', borderWidth: 1, padding: 10, cornerRadius: 8 } }
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#4B5563' } },
+                            y: { beginAtZero: true, grid: { color: '#E5E7EB' }, ticks: { color: '#4B5563' } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1F2937',
+                                titleColor: '#F9FAFB',
+                                bodyColor: '#D1D5DB',
+                                borderColor: '#D1D5DB',
+                                borderWidth: 1,
+                                padding: 10,
+                                cornerRadius: 8
+                            }
+                        }
                     }}
                 />
             </div>
@@ -315,12 +224,23 @@ const WeeklyEarningsChart = ({ trips }: { trips: TripResponseDto[] | undefined }
 };
 
 const VehicleInfo = ({ vehicle }: { vehicle: any | undefined }) => {
-    if (!vehicle) return null;
+    if (!vehicle) return (
+        <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800">My Vehicle</h2>
+            <div className="text-center py-8 text-gray-500">
+                <Car size={48} className="mx-auto mb-4 opacity-30" />
+                <p>No vehicle information available</p>
+            </div>
+        </div>
+    );
+
     return (
         <div className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
             <div className="flex items-center space-x-3">
                 <h2 className="text-2xl font-bold text-gray-800">My Vehicle</h2>
-                <div className={`px-3 py-1 text-xs font-semibold rounded-full ${vehicle.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-yellow-500 text-white'}`}>{vehicle.status}</div>
+                <div className={`px-3 py-1 text-xs font-semibold rounded-full ${vehicle.status === 'active' ? 'bg-emerald-500 text-white' : 'bg-yellow-500 text-white'}`}>
+                    {vehicle.status}
+                </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-3">
@@ -365,11 +285,14 @@ const RecentTrips = ({ trips }: RecentTripsProps) => {
                     <div key={trip.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex flex-col">
                             <p className="font-medium text-gray-900">Trip on {formatDate(trip.startTime)}</p>
-                            <p className="text-sm text-gray-500">Distance: {trip.distanceKm?.toFixed(1)} km</p>
+                            <p className="text-sm text-gray-500">Distance:
+                                {/* {trip.distanceKm?.toFixed(1)} */}
+                                km</p>
                         </div>
                         <div className="flex flex-col items-end space-y-1">
                             <span className="text-lg font-bold text-emerald-600">{formatCurrency(trip.totalFare)}</span>
-                            <div className={`px-2 py-1 text-xs font-semibold rounded-full ${trip.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            <div className={`px-2 py-1 text-xs font-semibold rounded-full ${trip.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                }`}>
                                 {trip.paymentStatus}
                             </div>
                         </div>
@@ -390,33 +313,27 @@ const RecentTrips = ({ trips }: RecentTripsProps) => {
 // MAIN DASHBOARD COMPONENT
 //================================================================
 const Dashboard = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const { authData: { userId, username } } = useAuth();
+    const { authData: { userId } } = useAuth();
     const { data: Trip } = useGetTripsByDriver(userId, !!userId);
     const { data: PaginatedResponseDto } = useGetVehicle(userId, !!userId);
 
     const trips = Trip?.data.items || [];
     const vehicle = PaginatedResponseDto?.data.items[0];
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
-
     return (
-        <>
-            {/* Sidebar */}
-            <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <div className="min-h-screen bg-gray-50 flex">
+            {/* Persistent Sidebar */}
+            <Sidebar />
 
-            {/* Main Content */}
-            <div className={`min-h-screen bg-gray-50 transition-all duration-300 ${isSidebarOpen ? 'lg:ml-80' : ''}`}>
+            {/* Main Content Area */}
+            <div className="flex-1 lg:ml-72">
                 <div className="container mx-auto px-4 py-8">
-                    {/* This container provides the vertical spacing between sections */}
                     <div className="space-y-12">
-                        <DashboardHeader username={username} toggleSidebar={toggleSidebar} />
+                        <DashboardHeader />
                         <StatsSection trips={trips} />
                         <WeeklyEarningsChart trips={trips} />
 
-                        {/* This section creates the side-by-side layout for Vehicle & Trips */}
+                        {/* Vehicle & Trips Grid */}
                         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <VehicleInfo vehicle={vehicle} />
                             <RecentTrips trips={trips} />
@@ -425,16 +342,28 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Floating Action Button for Mobile */}
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleSidebar}
-                className="lg:hidden fixed bottom-6 right-6 p-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-2xl z-30"
-            >
-                <Menu size={24} />
-            </motion.button>
-        </>
+            {/* Mobile Navigation Bottom Bar */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+                <div className="flex justify-around">
+                    <button className="flex flex-col items-center p-2 text-emerald-600">
+                        <Route size={20} />
+                        <span className="text-xs mt-1">Dashboard</span>
+                    </button>
+                    <button className="flex flex-col items-center p-2 text-gray-500">
+                        <MapPin size={20} />
+                        <span className="text-xs mt-1">New Trip</span>
+                    </button>
+                    <button className="flex flex-col items-center p-2 text-gray-500">
+                        <User size={20} />
+                        <span className="text-xs mt-1">Profile</span>
+                    </button>
+                    <button className="flex flex-col items-center p-2 text-gray-500">
+                        <Settings size={20} />
+                        <span className="text-xs mt-1">Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
 

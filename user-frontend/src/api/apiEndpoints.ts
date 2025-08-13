@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
     // Ratings
     RATINGS: {
       BASE: '/drivers/ratings',
-      GET_BY_ID: (id: string) => `drivers/ratings/${id}`,
+      GET_BY_ID: (id: string) => `drivers/${id}/ratings`,
     },
 
     AUTH: {
@@ -25,14 +25,14 @@ export const API_ENDPOINTS = {
   RATES: {
     FARE: {
       BASE: '/rates',
-      GET_ALL_RATES: '/rates',
+      GET_ALL_RATES: 'fares/rates',
       GET_BY_VEHICLE_TYPE: (id: string) => `rates/vehicle-type/${id}`,
     },
 
     //Region
     REGION: {
-      BASE: '/regional-multipliers',
-      GET_RATES: '/regional-multipliers',
+      BASE: 'fates/regional-multipliers',
+      GET_RATES: 'fares/regional-multipliers',
       GET_BY_ID: (id: string) => `regional-multipliers/region/${id}`
     },
   },

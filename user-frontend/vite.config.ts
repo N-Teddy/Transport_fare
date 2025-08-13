@@ -14,5 +14,13 @@ export default defineConfig({
         global: 'globalThis',
       },
     },
+  },
+  resolve: {
+    alias: {
+      // This tells Vite to use the browser-compatible version of the 'crypto' module
+      'crypto': 'crypto-browserify',
+      // This is also needed for the crypto-browserify library to work
+      'stream': 'stream-browserify'
+    }
   }
 })
