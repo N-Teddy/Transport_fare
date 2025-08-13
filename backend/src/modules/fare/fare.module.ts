@@ -7,11 +7,12 @@ import { RegionalFareMultiplier } from 'src/entities/regional-fare-rates.entity'
 import { VehicleType } from 'src/entities/vehicle-type.entity';
 import { Region } from 'src/entities/region.entity';
 import { CacheModule } from '@nestjs/cache-manager';
+import { City } from 'src/entities/city.entity';
 
 @Module({
     imports: [
         CacheModule.register(),
-        TypeOrmModule.forFeature([FareRate, RegionalFareMultiplier, VehicleType, Region]),
+        TypeOrmModule.forFeature([FareRate, RegionalFareMultiplier, VehicleType, Region, City]),
     ],
     controllers: [FareController],
     providers: [FareService],

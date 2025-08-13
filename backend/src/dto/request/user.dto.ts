@@ -12,6 +12,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoleEnum } from 'src/common/enum/global.enum';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
     @ApiProperty({ description: 'Unique username' })
@@ -147,11 +148,13 @@ export class UserQueryDto {
 
     @ApiProperty({ description: 'Page number', required: false, default: 1 })
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     page?: number = 1;
 
     @ApiProperty({ description: 'Items per page', required: false, default: 10 })
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     limit?: number = 10;
 }

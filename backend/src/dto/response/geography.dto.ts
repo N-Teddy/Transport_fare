@@ -90,6 +90,9 @@ export class RegionResponseDto {
 
     @ApiProperty({ description: 'Last update date' })
     updatedAt: Date;
+
+    @ApiProperty({ description: 'List of cities in region' })
+    cities?: CityResponseDto[];
 }
 
 export class RegionWithCitiesResponseDto extends RegionResponseDto {

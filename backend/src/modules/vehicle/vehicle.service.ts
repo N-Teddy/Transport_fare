@@ -181,30 +181,35 @@ export class VehicleService {
     }
 
     async getVehicleTypeStatistics(): Promise<VehicleTypeStatisticsDto> {
-        const totalTypes = await this.vehicleTypeRepository.count();
-        const requiresHelmet = await this.vehicleTypeRepository.count({
-            where: { requiresHelmet: true },
-        });
+        try {
+            console.log('ok');
+            const totalTypes = await this.vehicleTypeRepository.count();
+            const requiresHelmet = await this.vehicleTypeRepository.count({
+                where: { requiresHelmet: true },
+            });
 
-        const types = await this.vehicleTypeRepository.find();
-        const byPassengerCapacity: Record<string, number> = {};
+            const types = await this.vehicleTypeRepository.find();
+            const byPassengerCapacity: Record<string, number> = {};
 
-        types.forEach((type) => {
-            if (type.maxPassengers) {
-                let capacity: string;
-                if (type.maxPassengers <= 2) capacity = '1-2';
-                else if (type.maxPassengers <= 5) capacity = '3-5';
-                else capacity = '6+';
+            types.forEach((type) => {
+                if (type.maxPassengers) {
+                    let capacity: string;
+                    if (type.maxPassengers <= 2) capacity = '1-2';
+                    else if (type.maxPassengers <= 5) capacity = '3-5';
+                    else capacity = '6+';
 
-                byPassengerCapacity[capacity] = (byPassengerCapacity[capacity] || 0) + 1;
-            }
-        });
+                    byPassengerCapacity[capacity] = (byPassengerCapacity[capacity] || 0) + 1;
+                }
+            });
 
-        return {
-            totalTypes,
-            requiresHelmet,
-            byPassengerCapacity,
-        };
+            return {
+                totalTypes,
+                requiresHelmet,
+                byPassengerCapacity,
+            };
+        } catch (error) {
+            throw error;
+        }
     }
 
     // Vehicle Methods
@@ -406,28 +411,32 @@ export class VehicleService {
     async bulkUpdateVehicleStatus(
         bulkUpdateDto: BulkUpdateVehicleStatusDto,
     ): Promise<BulkUpdateResponseDto> {
-        const { vehicleIds, status } = bulkUpdateDto;
+        try {
+            const { vehicleIds, status } = bulkUpdateDto;
 
-        const vehicles = await this.vehicleRepository.find({
-            where: { id: In(vehicleIds) },
-        });
+            const vehicles = await this.vehicleRepository.find({
+                where: { id: In(vehicleIds) },
+            });
 
-        if (vehicles.length !== vehicleIds.length) {
-            throw new BadRequestException('Some vehicle IDs not found');
+            if (vehicles.length !== vehicleIds.length) {
+                throw new BadRequestException('Some vehicle IDs not found');
+            }
+
+            const updatePromises = vehicles.map((vehicle) => {
+                vehicle.status = status;
+                return this.vehicleRepository.save(vehicle);
+            });
+
+            const updatedVehicles = await Promise.all(updatePromises);
+
+            return {
+                updatedCount: updatedVehicles.length,
+                updatedIds: updatedVehicles.map((v) => v.id),
+                failedIds: [],
+            };
+        } catch (error) {
+            throw error;
         }
-
-        const updatePromises = vehicles.map((vehicle) => {
-            vehicle.status = status;
-            return this.vehicleRepository.save(vehicle);
-        });
-
-        const updatedVehicles = await Promise.all(updatePromises);
-
-        return {
-            updatedCount: updatedVehicles.length,
-            updatedIds: updatedVehicles.map((v) => v.id),
-            failedIds: [],
-        };
     }
 
     async updateVehiclePhotoVerification(

@@ -16,6 +16,9 @@ import {
     // Res,
     // NotFoundException,
     BadRequestException,
+    StreamableFile,
+    NotFoundException,
+    Res,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -67,6 +70,10 @@ import { UserRoleEnum } from 'src/common/enum/global.enum';
 import { GetUser } from 'src/common/decorator/get-user.decorator';
 import { DocumentPhotoEnum } from 'src/common/enum/document-photo.enum';
 import { ApiResponseStatus, ApiResponseMessage } from 'src/common/enum/global.enum';
+import { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import { UpdateResult } from 'typeorm';
 
 @Controller('documents')
 // @UseGuards(JwtAuthGuard, RolesGuard)
@@ -212,6 +219,24 @@ export class DocumentPhotoController {
         return this.documentPhotoService.processDocument(processDto);
     }
 
+    // Statistics Endpoints
+    @Get('statistics')
+    @ApiOperation({ summary: 'Get document statistics' })
+    @ApiQuery({ name: 'entityType', required: false, description: 'Filter by entity type' })
+    @ApiQuery({ name: 'fromDate', required: false, description: 'Date range start' })
+    @ApiQuery({ name: 'toDate', required: false, description: 'Date range end' })
+    @ApiQuery({ name: 'groupBy', required: false, description: 'Group by field' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Document statistics retrieved successfully',
+        type: DocumentStatisticsDto,
+    })
+    async getDocumentStatistics(
+        @Query() query: DocumentStatisticsQueryDto,
+    ): Promise<DocumentStatisticsDto> {
+        return this.documentPhotoService.getDocumentStatistics(query);
+    }
+
     @Post('process/batch')
     @Roles(UserRoleEnum.ADMIN, UserRoleEnum.GOVERNMENT_OFFICIAL)
     @ApiOperation({ summary: 'Process multiple documents' })
@@ -233,7 +258,9 @@ export class DocumentPhotoController {
         status: HttpStatus.OK,
         description: 'Processing status updated successfully',
     })
-    async updateProcessingStatus(@Body() updateDto: UpdateProcessingStatusDto): Promise<void> {
+    async updateProcessingStatus(
+        @Body() updateDto: UpdateProcessingStatusDto,
+    ): Promise<UpdateResult> {
         return this.documentPhotoService.updateProcessingStatus(updateDto);
     }
 
@@ -404,24 +431,6 @@ export class DocumentPhotoController {
         return this.documentPhotoService.batchDeleteDocuments(batchDto);
     }
 
-    // Statistics Endpoints
-    @Get('statistics')
-    @ApiOperation({ summary: 'Get document statistics' })
-    @ApiQuery({ name: 'entityType', required: false, description: 'Filter by entity type' })
-    @ApiQuery({ name: 'fromDate', required: false, description: 'Date range start' })
-    @ApiQuery({ name: 'toDate', required: false, description: 'Date range end' })
-    @ApiQuery({ name: 'groupBy', required: false, description: 'Group by field' })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        description: 'Document statistics retrieved successfully',
-        type: DocumentStatisticsDto,
-    })
-    async getDocumentStatistics(
-        @Query() query: DocumentStatisticsQueryDto,
-    ): Promise<DocumentStatisticsDto> {
-        return this.documentPhotoService.getDocumentStatistics(query);
-    }
-
     // Queue Management Endpoints
     @Get('queue/status')
     @Roles(UserRoleEnum.ADMIN, UserRoleEnum.GOVERNMENT_OFFICIAL)
@@ -454,5 +463,65 @@ export class DocumentPhotoController {
             documentCount: 0,
             createdAt: new Date(),
         };
+    }
+
+    @Get(':id/file')
+    async getDocumentFile(
+        @Param('id') id: string,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<StreamableFile> {
+        try {
+            // Get document from database
+            const document = await this.documentPhotoService.findDocumentById(id);
+
+            if (!document) {
+                throw new NotFoundException('Document not found');
+            }
+            // Check if file exists
+            if (!fs.existsSync(document.filePath)) {
+                throw new NotFoundException('Document file not found on server');
+            }
+            // Read file
+            const file = fs.createReadStream(document.filePath);
+
+            // Set appropriate headers
+            res.set({
+                'Content-Type': document.mimeType || 'application/octet-stream',
+                'Content-Disposition': `inline; filename="${document.fileName}"`,
+            });
+            return new StreamableFile(file);
+        } catch (error) {
+            throw new NotFoundException('Unable to retrieve document file');
+        }
+    }
+
+    @Get(':id/download')
+    async downloadDocumentFile(
+        @Param('id') id: string,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<StreamableFile> {
+        try {
+            // Get document from database
+            const document = await this.documentPhotoService.findDocumentById(id);
+
+            if (!document) {
+                throw new NotFoundException('Document not found');
+            }
+            // Check if file exists
+            if (!fs.existsSync(document.filePath)) {
+                throw new NotFoundException('Document file not found on server');
+            }
+            // Read file
+            const file = fs.createReadStream(document.filePath);
+
+            // Set headers for download
+            res.set({
+                'Content-Type': document.mimeType || 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${document.fileName}"`,
+            });
+            return new StreamableFile(file);
+        } catch (error) {
+            throw new NotFoundException('Unable to download document file');
+        }
     }
 }

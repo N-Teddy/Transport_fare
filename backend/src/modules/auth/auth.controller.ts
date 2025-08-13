@@ -9,7 +9,7 @@ import {
     HttpCode,
     HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -35,7 +35,7 @@ import { ApiResponseDto } from '../../dto/response/common.dto';
 import { ApiResponseStatus, ApiResponseMessage } from '../../common/enum/global.enum';
 
 @ApiTags('Authentication')
-@ApiBearerAuth('access-token')
+// @ApiBearerAuth('access-token')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}

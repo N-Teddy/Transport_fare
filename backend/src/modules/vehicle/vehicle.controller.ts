@@ -134,6 +134,22 @@ export class VehicleController {
         };
     }
 
+    @Get('types/statistics')
+    @ApiOperation({ summary: 'Get vehicle type statistics' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Vehicle type statistics retrieved successfully',
+        type: ApiResponseDto,
+    })
+    async getVehicleTypeStatistics(): Promise<ApiResponseDto<VehicleTypeStatisticsDto>> {
+        const result = await this.vehicleService.getVehicleTypeStatistics();
+        return {
+            status: ApiResponseStatus.SUCCESS,
+            message: ApiResponseMessage.VEHICLE_TYPE_STATISTICS_FETCHED,
+            data: result,
+        };
+    }
+
     @Get('types/:id')
     @ApiOperation({ summary: 'Get vehicle type by ID' })
     @ApiParam({ name: 'id', type: 'string', format: 'uuid', description: 'Vehicle type ID (UUID)' })
@@ -192,22 +208,6 @@ export class VehicleController {
             status: ApiResponseStatus.SUCCESS,
             message: ApiResponseMessage.VEHICLE_TYPE_DELETED,
             data: { id },
-        };
-    }
-
-    @Get('types/statistics')
-    @ApiOperation({ summary: 'Get vehicle type statistics' })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        description: 'Vehicle type statistics retrieved successfully',
-        type: ApiResponseDto,
-    })
-    async getVehicleTypeStatistics(): Promise<ApiResponseDto<VehicleTypeStatisticsDto>> {
-        const result = await this.vehicleService.getVehicleTypeStatistics();
-        return {
-            status: ApiResponseStatus.SUCCESS,
-            message: ApiResponseMessage.VEHICLE_TYPE_STATISTICS_FETCHED,
-            data: result,
         };
     }
 
@@ -294,6 +294,22 @@ export class VehicleController {
                     hasPrev: result.page > 1,
                 },
             },
+        };
+    }
+
+    @Get('statistics')
+    @ApiOperation({ summary: 'Get vehicle statistics' })
+    @ApiResponse({
+        status: 200,
+        description: 'Vehicle statistics retrieved successfully',
+        type: ApiResponseDto,
+    })
+    async getVehicleStatistics(): Promise<ApiResponseDto<VehicleStatisticsDto>> {
+        const result = await this.vehicleService.getVehicleStatistics();
+        return {
+            status: ApiResponseStatus.SUCCESS,
+            message: ApiResponseMessage.VEHICLE_STATS_FETCHED,
+            data: result,
         };
     }
 
@@ -387,22 +403,6 @@ export class VehicleController {
         return {
             status: ApiResponseStatus.SUCCESS,
             message: ApiResponseMessage.VEHICLE_PHOTOS_VERIFIED,
-            data: result,
-        };
-    }
-
-    @Get('statistics')
-    @ApiOperation({ summary: 'Get vehicle statistics' })
-    @ApiResponse({
-        status: 200,
-        description: 'Vehicle statistics retrieved successfully',
-        type: ApiResponseDto,
-    })
-    async getVehicleStatistics(): Promise<ApiResponseDto<VehicleStatisticsDto>> {
-        const result = await this.vehicleService.getVehicleStatistics();
-        return {
-            status: ApiResponseStatus.SUCCESS,
-            message: ApiResponseMessage.VEHICLE_STATS_FETCHED,
             data: result,
         };
     }

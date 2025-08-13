@@ -97,9 +97,6 @@ export class DriverRatingResponseDto {
     @ApiProperty({ description: 'Driver rating ID' })
     id: string;
 
-    @ApiProperty({ description: 'Trip ID' })
-    tripId: string;
-
     @ApiProperty({ description: 'Driver ID' })
     driverId: string;
 

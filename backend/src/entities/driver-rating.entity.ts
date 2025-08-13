@@ -6,9 +6,6 @@ import { BaseEntity } from './base.entity';
 @Entity('driver_ratings')
 export class DriverRating extends BaseEntity {
     @Column({ type: 'uuid' })
-    tripId: string;
-
-    @Column({ type: 'uuid' })
     driverId: string;
 
     @Column({ type: 'varchar', length: 20, nullable: true })

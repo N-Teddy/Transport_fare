@@ -13,6 +13,8 @@ import { RegionalFareMultiplier } from 'src/entities/regional-fare-rates.entity'
 import { RegionalFareMultiplierSeed } from './data/regional-multiplier.seed-data';
 import { Trip } from 'src/entities/trip.entity';
 import { tripSeeds } from './data/trip.seed-data';
+import { DriverRating } from 'src/entities/driver-rating.entity';
+import { ratingsSeed } from './data/rating.seed-data';
 
 @Injectable()
 export class SeedService implements OnApplicationBootstrap {
@@ -23,6 +25,7 @@ export class SeedService implements OnApplicationBootstrap {
         @InjectRepository(RegionalFareMultiplier)
         private readonly regionalMultiplierRepo: Repository<RegionalFareMultiplier>,
         @InjectRepository(Trip) private readonly tripRepo: Repository<Trip>,
+        @InjectRepository(DriverRating) private readonly ratingRepo: Repository<DriverRating>,
     ) {}
 
     async onApplicationBootstrap() {
@@ -31,6 +34,7 @@ export class SeedService implements OnApplicationBootstrap {
         await this.seedFares();
         await this.seedRegionalMultipliers();
         await this.seedTrips();
+        await this.seedRatings();
     }
 
     private async seedUsers() {
@@ -163,5 +167,34 @@ export class SeedService implements OnApplicationBootstrap {
         }
 
         console.log('✅ Trip seeding complete.');
+    }
+
+    private async seedRatings() {
+        console.log('🌱 Seeding ratings...');
+
+        for (const rating of ratingsSeed) {
+            const exists = await this.ratingRepo.findOne({
+                where: {
+                    passengerPhone: rating.passengerPhone,
+                    driverId: rating.driverId,
+                },
+            });
+
+            if (exists) {
+                console.log(`⏩ Skipping trip ${rating.driverId} (already exists)`);
+                continue;
+            }
+
+            await this.ratingRepo.save(
+                this.ratingRepo.create({
+                    ...rating,
+                    driver: { id: rating.driverId },
+                }),
+            );
+
+            console.log(`✅ Inserted rating for trip ${rating.driverId}`);
+        }
+
+        console.log('✅ Rating seeding complete.');
     }
 }

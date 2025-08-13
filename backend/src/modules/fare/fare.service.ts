@@ -24,6 +24,8 @@ import {
 } from '../../dto/response/fare.dto';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { RegionResponseDto } from 'src/dto/response/geography.dto';
+import { City } from 'src/entities/city.entity';
 
 @Injectable()
 export class FareService {
@@ -36,6 +38,8 @@ export class FareService {
         private readonly vehicleTypeRepository: Repository<VehicleType>,
         @InjectRepository(Region)
         private readonly regionRepository: Repository<Region>,
+        @InjectRepository(City)
+        private cityRepository: Repository<City>,
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
     ) {}
 
@@ -321,7 +325,8 @@ export class FareService {
 
         const queryBuilder = this.regionalMultiplierRepository
             .createQueryBuilder('multiplier')
-            .leftJoinAndSelect('multiplier.region', 'region');
+            .leftJoinAndSelect('multiplier.region', 'region')
+            .loadRelationCountAndMap('region.cityCount', 'region.cities'); // auto adds cityCount
 
         // Apply filters
         if (regionId) {
@@ -635,9 +640,7 @@ export class FareService {
         };
     }
 
-    private mapToRegionalMultiplierResponseDto(
-        multiplier: RegionalFareMultiplier,
-    ): RegionalFareMultiplierResponseDto {
+    private mapToRegionalMultiplierResponseDto(multiplier: RegionalFareMultiplier): any {
         return {
             id: multiplier.id,
             regionId: multiplier.regionId,
@@ -648,6 +651,19 @@ export class FareService {
             isActive: multiplier.isActive,
             createdAt: multiplier.createdAt,
             updatedAt: multiplier.updatedAt,
+            region: multiplier.region ? this.mapToRegionResponse(multiplier.region) : undefined,
+        };
+    }
+
+    private mapToRegionResponse(region: Region): RegionResponseDto {
+        return {
+            id: region.id,
+            name: region.name,
+            code: region.code,
+            capitalCity: region.capitalCity,
+            cityCount: (region as any).cityCount ?? 0,
+            createdAt: region.createdAt,
+            updatedAt: region.updatedAt,
         };
     }
 }

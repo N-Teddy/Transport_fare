@@ -48,7 +48,7 @@ import { ApiResponseStatus, ApiResponseMessage } from 'src/common/enum/global.en
 @ApiTags('Fares')
 @ApiBearerAuth('access-token')
 @Controller('fares')
-@UseGuards(JwtAuthGuard, RolesGuard)
+// @UseGuards(JwtAuthGuard, RolesGuard)
 export class FareController {
     constructor(private readonly fareService: FareService) {}
 
@@ -370,8 +370,13 @@ export class FareController {
         type: FareStatisticsResponseDto,
     })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
-    async getFareStatistics(): Promise<FareStatisticsResponseDto> {
-        return this.fareService.getFareStatistics();
+    async getFareStatistics(): Promise<ApiResponseDto<FareStatisticsResponseDto>> {
+        const result = await this.fareService.getFareStatistics();
+        return {
+            status: ApiResponseStatus.SUCCESS,
+            message: ApiResponseMessage.FARE_STATS_FETCHED,
+            data: result,
+        };
     }
 
     // Additional endpoints for convenience

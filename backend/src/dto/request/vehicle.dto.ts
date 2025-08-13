@@ -304,9 +304,8 @@ export class VehicleQueryDto {
         example: 1,
     })
     @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    vehicleTypeId?: number;
+    @IsString()
+    vehicleTypeId?: string;
 
     @ApiPropertyOptional({
         description: 'Vehicle status filter',
@@ -462,7 +461,7 @@ export class BulkUpdateVehicleStatusDto {
         ],
     })
     @IsArray()
-    @IsNumber({}, { each: true })
+    @IsUUID('4', { each: true })
     vehicleIds: string[];
 
     @ApiProperty({

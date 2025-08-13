@@ -269,14 +269,15 @@ export class AuthService {
                 where: { id: payload.userId },
             });
 
-            if (!user || !driver) {
+            if (!user && !driver) {
+                console.log('user mot found');
                 throw new UnauthorizedException('User not found');
             }
-
             const { passwordHash, ...userWithoutPassword } = user;
+
             return await this.generateTokens(userWithoutPassword);
         } catch (error) {
-            throw new UnauthorizedException('Invalid refresh token', error);
+            throw new UnauthorizedException('Invalid refresh token');
         }
     }
 
@@ -395,6 +396,7 @@ export class AuthService {
     }
 
     private async generateTokens(user: any): Promise<TokenResponseDto> {
+        console.log('ok');
         const payload = {
             userId: user.id,
             username: user.username,
@@ -405,7 +407,7 @@ export class AuthService {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(payload, {
                 secret: this.configService.get<string>('JWT_SECRET'),
-                expiresIn: '15m',
+                expiresIn: '1d',
             }),
             this.jwtService.signAsync(payload, {
                 secret: this.configService.get<string>('JWT_REFRESH_SECRET'),

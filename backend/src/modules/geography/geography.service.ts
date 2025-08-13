@@ -96,6 +96,7 @@ export class GeographyService {
     async findRegionById(id: string): Promise<RegionResponseDto> {
         const region = await this.regionRepository.findOne({
             where: { id },
+            relations: ['cities'],
         });
 
         if (!region) {
@@ -432,7 +433,6 @@ export class GeographyService {
         };
     }
 
-    // Helper Methods
     private async mapToRegionResponse(region: Region): Promise<RegionResponseDto> {
         const cityCount = await this.cityRepository.count({
             where: { regionId: region.id },
@@ -446,10 +446,13 @@ export class GeographyService {
             cityCount,
             createdAt: region.createdAt,
             updatedAt: region.updatedAt,
+            cities: region.cities
+                ? region.cities.map((city) => this.mapToCityResponse(city))
+                : undefined,
         };
     }
 
-    private async mapToCityResponse(city: City): Promise<CityResponseDto> {
+    private mapToCityResponse(city: City): CityResponseDto {
         return {
             id: city.id,
             name: city.name,

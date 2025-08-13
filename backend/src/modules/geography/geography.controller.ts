@@ -47,7 +47,7 @@ import {
     CityDeletedResponseDto,
     GeographyStatsResponseDto,
 } from '../../dto/response/geography.dto';
-import { PaginatedResponseDto } from '../../dto/response/common.dto';
+import { ApiResponseDto, PaginatedResponseDto } from '../../dto/response/common.dto';
 import { ApiResponseStatus, ApiResponseMessage } from '../../common/enum/global.enum';
 
 @ApiTags('Geography')
@@ -333,7 +333,12 @@ export class GeographyController {
         type: GeographyStatsResponseDto,
     })
     @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-    async getGeographyStats(): Promise<GeographyStatsResponseDto> {
-        return this.geographyService.getGeographyStats();
+    async getGeographyStats(): Promise<ApiResponseDto<GeographyStatsResponseDto>> {
+        const result = await this.geographyService.getGeographyStats();
+        return {
+            status: ApiResponseStatus.SUCCESS,
+            message: ApiResponseMessage.GEOGRAPHY_STATS_FETCHED,
+            data: result,
+        };
     }
 }

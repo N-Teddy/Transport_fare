@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { DocumentPhoto } from 'src/entities/document-photo.entity';
 import { User } from 'src/entities/user.entity';
@@ -211,7 +211,7 @@ export class DocumentPhotoService {
         };
     }
 
-    async updateProcessingStatus(updateDto: UpdateProcessingStatusDto): Promise<void> {
+    async updateProcessingStatus(updateDto: UpdateProcessingStatusDto): Promise<UpdateResult> {
         const document = await this.documentPhotoRepository.findOne({
             where: { id: updateDto.documentId },
         });
@@ -230,7 +230,7 @@ export class DocumentPhotoService {
             lastUpdated: new Date().toISOString(),
         };
 
-        await this.documentPhotoRepository.update(document.id, {
+        return await this.documentPhotoRepository.update(document.id, {
             processingMetadata: processingMetadata as any,
         });
     }

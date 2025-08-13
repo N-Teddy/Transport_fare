@@ -10,6 +10,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { CameroonRegionEnum, CameroonRegionCodesEnum } from '../../common/enum/region.enum';
 import { CityEnum } from '../../common/enum/city.enum';
+import { Type } from 'class-transformer';
 
 // Region DTOs
 export class CreateRegionDto {
@@ -59,11 +60,13 @@ export class RegionQueryDto {
 
     @ApiProperty({ description: 'Page number', required: false, default: 1 })
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     page?: number = 1;
 
     @ApiProperty({ description: 'Items per page', required: false, default: 10 })
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     limit?: number = 10;
 }
@@ -122,10 +125,12 @@ export class CityQueryDto {
     @ApiProperty({ description: 'Page number', required: false, default: 1 })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     page?: number = 1;
 
     @ApiProperty({ description: 'Items per page', required: false, default: 10 })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     limit?: number = 10;
 }

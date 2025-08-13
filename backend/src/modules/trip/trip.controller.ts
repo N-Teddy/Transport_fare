@@ -185,7 +185,12 @@ export class TripController {
     @ApiOperation({ summary: 'Get overall trip statistics' })
     @ApiResponse({ status: 200, description: 'Overall trip statistics.' })
     async getTripStats() {
-        return this.tripService.getTripStats();
+        const result = await this.tripService.getTripStats();
+        return {
+            status: ApiResponseStatus.SUCCESS,
+            message: ApiResponseMessage.TRIP_STATS_FETCHED,
+            data: result,
+        };
     }
 
     @Get('stats/driver/:driverId')

@@ -222,10 +222,6 @@ export class DriverQueryDto {
 
 // Driver Rating Request DTOs
 export class CreateDriverRatingDto {
-    @ApiProperty({ description: 'Trip ID', example: 'trip-uuid-123' })
-    @IsUUID()
-    tripId: string;
-
     @ApiProperty({ description: 'Driver ID' })
     @IsNotEmpty()
     @IsUUID()
@@ -321,10 +317,10 @@ export class DriverRatingQueryDto {
     @IsUUID()
     driverId?: string;
 
-    @ApiProperty({ description: 'Filter by trip ID', example: 'trip-uuid-123', required: false })
-    @IsOptional()
-    @IsUUID()
-    tripId?: string;
+    // @ApiProperty({ description: 'Filter by trip ID', example: 'trip-uuid-123', required: false })
+    // @IsOptional()
+    // @IsUUID()
+    // tripId?: string;
 
     @ApiProperty({ description: 'Filter by passenger phone', example: '+237612', required: false })
     @IsOptional()

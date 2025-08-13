@@ -29,6 +29,13 @@ import {
 } from 'src/dto/response/driver.dto';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Vehicle } from 'src/entities/vehicle.entity';
+import { VehicleResponseDto, VehicleTypeResponseDto } from 'src/dto/response/vehicle.dto';
+import { VehicleType } from 'src/entities/vehicle-type.entity';
+import { DocumentPhoto } from 'src/entities/document-photo.entity';
+import { DocumentResponseDto } from 'src/dto/response/document.dto';
+import { City } from 'src/entities/city.entity';
+import { CityResponseDto } from 'src/dto/response/geography.dto';
 
 @Injectable()
 export class DriverService {
@@ -181,7 +188,7 @@ export class DriverService {
     async findDriverById(id: string): Promise<DriverResponseDto> {
         const driver = await this.driverRepository.findOne({
             where: { id },
-            relations: ['city'],
+            relations: ['city', 'city.region', 'ownedVehicles'],
         });
 
         if (!driver) {
@@ -360,13 +367,13 @@ export class DriverService {
     // Driver Rating Methods
     async createDriverRating(createDriverRatingDto: CreateDriverRatingDto) {
         // Check if rating already exists for this trip
-        const existingRating = await this.driverRatingRepository.findOne({
-            where: { tripId: createDriverRatingDto.tripId },
-        });
+        // const existingRating = await this.driverRatingRepository.findOne({
+        //     where: { tripId: createDriverRatingDto.tripId },
+        // });
 
-        if (existingRating) {
-            throw new ConflictException('Rating already exists for this trip');
-        }
+        // if (existingRating) {
+        //     throw new ConflictException('Rating already exists for this trip');
+        // }
 
         // Validate driver exists
         const driver = await this.driverRepository.findOne({
@@ -393,7 +400,7 @@ export class DriverService {
             page = 1,
             limit = 10,
             driverId,
-            tripId,
+            // tripId,
             passengerPhone,
             minRating,
             maxRating,
@@ -406,9 +413,9 @@ export class DriverService {
             whereConditions.driverId = driverId;
         }
 
-        if (tripId) {
-            whereConditions.tripId = tripId;
-        }
+        // if (tripId) {
+        //     whereConditions.tripId = tripId;
+        // }
 
         if (passengerPhone) {
             whereConditions.passengerPhone = Like(`%${passengerPhone}%`);
@@ -466,7 +473,7 @@ export class DriverService {
     }
 
     async findDriverRatingsByDriverId(driverId: string): Promise<DriverRatingResponseDto[]> {
-        const driver = await this.driverRepository.findOne({
+        const driver = await this.driverRepository.find({
             where: { id: driverId },
         });
 
@@ -476,7 +483,7 @@ export class DriverService {
 
         const ratings = await this.driverRatingRepository.find({
             where: { driverId },
-            relations: ['driver', 'trip'],
+            relations: ['driver'],
             order: { createdAt: 'DESC' },
         });
 
@@ -641,7 +648,7 @@ export class DriverService {
     }
 
     // Helper Methods
-    private async mapToDriverResponse(driver: Driver) {
+    private mapToDriverResponse(driver: Driver) {
         return {
             id: driver.id,
             licenseNumber: driver.licenseNumber,
@@ -661,13 +668,69 @@ export class DriverService {
             lastPhotoUpdate: driver.lastPhotoUpdate,
             createdAt: driver.createdAt,
             updatedAt: driver.updatedAt,
+            vehicle: driver.ownedVehicles
+                ? this.mapVehicleToResponse(driver.ownedVehicles[0])
+                : undefined,
+            city: driver.city ? this.mapToCityResponse(driver.city) : undefined,
+        };
+    }
+
+    private mapToCityResponse(city: City): CityResponseDto {
+        return {
+            id: city.id,
+            name: city.name,
+            regionId: city.regionId,
+            regionName: city.region?.name || 'Unknown Region',
+            regionCode: city.region?.code || 'N/A',
+            isMajorCity: city.isMajorCity,
+            createdAt: city.createdAt,
+            updatedAt: city.updatedAt,
+        };
+    }
+
+    // Helper methods
+    private mapVehicleTypeToResponse(vehicleType: VehicleType): VehicleTypeResponseDto {
+        return {
+            id: vehicleType.id,
+            typeName: vehicleType.typeName,
+            description: vehicleType.description,
+            maxPassengers: vehicleType.maxPassengers,
+            requiresHelmet: vehicleType.requiresHelmet,
+            createdAt: vehicleType.createdAt,
+            updatedAt: vehicleType.updatedAt,
+        };
+    }
+
+    private mapVehicleToResponse(vehicle: Vehicle): VehicleResponseDto {
+        return {
+            id: vehicle.id,
+            vehicleTypeId: vehicle.vehicleTypeId,
+            licensePlate: vehicle.licensePlate,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: vehicle.year,
+            color: vehicle.color,
+            engineCapacity: vehicle.engineCapacity,
+            insuranceNumber: vehicle.insuranceNumber,
+            insuranceExpiry: vehicle.insuranceExpiry,
+            inspectionExpiry: vehicle.inspectionExpiry,
+            ownerDriverId: vehicle.ownerDriverId,
+            registrationDate: vehicle.registrationDate,
+            status: vehicle.status,
+            photosVerified: vehicle.photosVerified,
+            lastPhotoUpdate: vehicle.lastPhotoUpdate,
+            createdAt: vehicle.createdAt,
+            updatedAt: vehicle.updatedAt,
+            vehicleType: vehicle.vehicleType
+                ? this.mapVehicleTypeToResponse(vehicle.vehicleType)
+                : undefined,
+            ownerDriver: vehicle.ownerDriver || undefined,
         };
     }
 
     private async mapToDriverRatingResponse(rating: DriverRating) {
         return {
             id: rating.id,
-            tripId: rating.tripId,
             driverId: rating.driverId,
             driverName: `${rating.driver?.firstName} ${rating.driver?.lastName}`,
             driverLicenseNumber: rating.driver?.licenseNumber,
